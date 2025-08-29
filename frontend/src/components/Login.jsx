@@ -1,29 +1,52 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { useForm } from "react-hook-form"
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { useAuth } from "../context/AuthProvider";
+
 export default function Login({ isOpen, onClose }) {
+  const navigate = useNavigate();
+  const [authUser, setAuthUser] = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!email || !password) {
-      setError("Both fields are required!");
+      setError("Please fill in all fields");
       return;
     }
-    console.log("Login:", { email, password });
-    setError("");
-    onClose();
+
+    try {
+      const res = await axios.post("http://localhost:4001/user/login", {
+        email,
+        password,
+      });
+
+      console.log(res.data);
+
+      // ✅ Save user & update context
+      localStorage.setItem("user", JSON.stringify(res.data));
+      setAuthUser(res.data);
+
+      toast.success("Logged in successfully");
+      if (onClose) onClose();
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "Login failed. Try again.");
+    }
   };
 
-  if (!isOpen) return null; // Hide modal if not open
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-80 flex items-center justify-center bg-black/50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
-        {/* Close Button */}
-        <Link to="/"
+        <Link
+          to="/"
           className="absolute top-3 right-3 text-gray-600 hover:text-gray-900"
           onClick={onClose}
         >
@@ -33,7 +56,6 @@ export default function Login({ isOpen, onClose }) {
         <h3 className="text-2xl font-bold text-center mb-4">Login</h3>
 
         <form onSubmit={handleSubmit}>
-          {/* Email */}
           <div className="mb-4">
             <label className="block mb-1">Email</label>
             <input
@@ -45,7 +67,6 @@ export default function Login({ isOpen, onClose }) {
             />
           </div>
 
-          {/* Password */}
           <div className="mb-4">
             <label className="block mb-1">Password</label>
             <input
@@ -59,7 +80,6 @@ export default function Login({ isOpen, onClose }) {
 
           {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
 
-          {/* Buttons */}
           <div className="flex justify-between items-center">
             <button
               type="submit"

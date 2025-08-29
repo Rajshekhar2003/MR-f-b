@@ -1,12 +1,24 @@
-import React from "react";
-import List from "../../public/List.json";
+import React, { useState, useEffect } from 'react';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
 import Cards from "./Cards";
-
+import axios from "axios";
 function Freebook() {
-  const filterdata = List.filter((data) => data.category === "Free");
+  const [book,setBook]=useState([])
+    useEffect(()=>{
+        const getBook=async()=>{
+            try {
+                const res=await axios.get("http://localhost:4001/book");
+                const data=res.data.filter((data) => data.category === "Free")
+                setBook(data)
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        getBook();
+    },[])
+  
 
   var settings = {
     dots: true,
@@ -59,7 +71,7 @@ function Freebook() {
       <div className="flex justify-center">
         <div className="w-full">
           <Slider {...settings}>
-            {filterdata.map((item) => (
+            {book.map((item) => (
               <div key={item.id} className="px-2">  {/* ✅ Reduced card spacing */}
                 <Cards item={item} />
               </div>
